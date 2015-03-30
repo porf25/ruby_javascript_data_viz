@@ -1,5 +1,10 @@
 <h2> Products in the market </h2>
 
+<div id="highChartContainer" style="min-width: 400px; height: 400px; margin: 0 auto"></div>
+
+
+<a href="#" data-hide-emelent="chart">Toggle Chart</a>
+
 <table>
   <tbody>
     <tr>
@@ -13,12 +18,94 @@
       <tr>
         <td><%= product.id %></td>
       	<td><%= product.name %></td>
-      	<td>$<%= product.price %></td>
+      	<td data-product='<%= product.id %>'>$<%= product.price %></td>
       	<td><%= product.user.name if product.user.present? %></td>
+        <td><%= link_to "+", product_path(product),
+                "data-price" => product.price, 
+                "data-incr-price" => product.id,
+                :method => :put %></td>
       </tr>
     <% end %>
   </tbody>
 </table>
+
+
+
+<script type="text/javascript">
+  console.log('Hello World'); 
+</script>
+
+<script type="text/javascript">
+  $('[data-hide-emelent=chart]').on('click', function(){
+    $('#highChartContainer').toggle()
+  });
+</script>
+
+<script type="text/javascript">
+  $('[data-incr-price]').on('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      price = $(this).attr('data-price');
+      newPrice = parseInt(price) + 1;
+      console.log(newPrice);
+
+      url = $(this).attr('href');
+
+      console.log(location.protocol + "//" + location.host + url);
+      $.ajax({url: url,
+              type: 'put',
+              dataType: 'json',
+              data: {product: {price: newPrice}}
+            }).success(function(data, textStatus, jqXHR) {
+              $('[data-product='+ data.id +']').html("$" + data.price);
+              $('[data-incr-price='+ data.id +']').attr('data-price', data.price); 
+            });
+  })
+  </script>
+
+<script type="text/javascript">
+  console.log("The number of products is " + "<%= @products.count %>");
+</script>
+
+<script type="text/javascript">
+  function printFun(){
+    console.log('Hey bro, this is fun from the fun function');
+  }
+
+  printFun();
+</script>
+
+<script type="text/javascript">
+  var fun = function printFun(){
+    console.log('Hey bro, this is fun from the fun function');
+  }
+</script>
+
+<script type='text/javascript'>
+    $(document).ready(function(){
+    chart = new Highcharts.Chart({
+    chart: {
+        renderTo: 'highChartContainer',
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false
+    },
+    title: {
+        text: 'Browser market shares at a specific website, 2010'
+    },
+    series: [{
+        type: 'pie',
+        name: 'Product Breakdown',
+        data: 
+            <%= 
+                @products.map do |product|
+                  [product.name, product.price/@sum_price]
+                end.to_json.html_safe
+            %>
+    }]
+  });
+  });
+</script>
 
    
    
